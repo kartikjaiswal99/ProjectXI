@@ -3,6 +3,8 @@ from django.conf import settings
 from uuid import uuid4
 from django.utils.text import slugify
 import uuid
+from django.core.validators import MinValueValidator
+
 
 class Category(models.Model):
     name = models.CharField(max_length=500)
@@ -105,6 +107,9 @@ class OrderItem(models.Model):
     product = models.ForeignKey(
         Product, related_name="product_orders", on_delete=models.CASCADE
     )
+    size = models.ForeignKey(
+        Size, related_name="size_orders", on_delete=models.CASCADE
+    )
     quantity = models.PositiveSmallIntegerField()
     unit_price = models.DecimalField(max_digits=9, decimal_places=2)
 
@@ -122,4 +127,9 @@ class CartItem(models.Model):
         'Cart', on_delete=models.CASCADE, related_name='items')
     product = models.ForeignKey(
         'Product', on_delete=models.CASCADE)
-    quantity = models.PositiveSmallIntegerField()
+    size = models.ForeignKey(
+        'Size', on_delete=models.CASCADE)
+    quantity = models.PositiveSmallIntegerField(validators=[MinValueValidator(1)])
+
+    class Meta:
+        unique_together = [['cart', 'product','size']]
