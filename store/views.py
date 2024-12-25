@@ -3,13 +3,16 @@ from django.db.models import Count
 from django_filters.rest_framework import DjangoFilterBackend
 
 from rest_framework.filters import SearchFilter, OrderingFilter
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.viewsets import ModelViewSet, GenericViewSet
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.mixins import CreateModelMixin, RetrieveModelMixin, DestroyModelMixin
 
-from .serializers import ProductSerializer, CategorySerializer, SizeSerializer, CartSerializer, CartItemSerializer, AddCartItemSerializer, UpdateCartItemSerializer
-from .models import Product, Category, Size, Cart, CartItem
+from .permissions import IsAdminOrReadOnly
+
+from .serializers import ProductSerializer, CategorySerializer, SizeSerializer, CartSerializer, CartItemSerializer, AddCartItemSerializer, UpdateCartItemSerializer, CustomerSerializer
+from .models import Product, Category, Size, Cart, CartItem, Customer
 from .filters import ProductFilter
 from .pagination import DefaultPagination
 
@@ -18,6 +21,7 @@ class ProductViewSet(ModelViewSet):
     serializer_class = ProductSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_class = ProductFilter
+    permission_classes = [IsAdminOrReadOnly]
     search_fields = ['name', 'description']
     ordering_fields = ['price', 'created_at']
     pagination_class = DefaultPagination
@@ -28,12 +32,14 @@ class CategoryViewSet(ModelViewSet):
     queryset = Category.objects.annotate(products_count=Count('products')).all()
     serializer_class = CategorySerializer
     lookup_field = 'slug'
+    permission_classes = [IsAdminOrReadOnly]
+
 
 
 class SizeViewSet(ModelViewSet):
     queryset = Size.objects.all()
     serializer_class = SizeSerializer
-
+    permission_classes = [IsAdminUser]
 
 class CartViewSet(CreateModelMixin,RetrieveModelMixin,DestroyModelMixin,GenericViewSet):
     queryset = Cart.objects.prefetch_related('items__product').all()
@@ -55,3 +61,21 @@ class CartItemViewSet(ModelViewSet):
 
     def get_queryset(self):
         return CartItem.objects.filter(cart_id=self.kwargs['cart_pk']).select_related('product')
+    
+
+class CustomerViewSet(ModelViewSet):
+    queryset = Customer.objects.all()
+    serializer_class = CustomerSerializer
+    permission_classes = [IsAdminUser]
+
+    @action(detail=False, methods=['GET', 'PUT'], permission_classes=[IsAuthenticated])
+    def me(self, request):
+        (customer, created) = Customer.objects.get_or_create(user_id=request.user.id)
+        if request.method == 'GET':
+            serializer = CustomerSerializer(customer)
+            return Response(serializer.data)
+        elif request.method == 'PUT':
+            serializer = CustomerSerializer(customer, data=request.data)   
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data)
