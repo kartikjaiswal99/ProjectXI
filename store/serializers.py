@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Product, Category, Size, Cart, CartItem, Customer
+from .models import Product, Category, ProductImage, Size, Cart, CartItem, Customer
 
 
 class CustomerSerializer(serializers.ModelSerializer):
@@ -18,14 +18,26 @@ class SizeSerializer(serializers.ModelSerializer):
         fields = ['id', 'size']
 
 
+class ProductImageSerializer(serializers.ModelSerializer):
+    def create(self, validated_data):
+        product_slug = self.context['product_slug']
+        product = Product.objects.get(slug=product_slug)
+        return ProductImage.objects.create(product=product, **validated_data)
+
+    class Meta:
+        model = ProductImage
+        fields = ['id', 'image']
+
 class ProductSerializer(serializers.ModelSerializer):
+    images = ProductImageSerializer(many=True, read_only=True)
+
     sizes = serializers.PrimaryKeyRelatedField(
         many=True, queryset=Size.objects.all()
     ) 
 
     class Meta:
         model = Product
-        fields = ['id', 'name', 'category', 'slug', 'description', 'details', 'price', 'stock', 'sizes', 'created_at']
+        fields = ['id', 'name', 'category', 'slug', 'description', 'details', 'price', 'stock', 'sizes', 'images', 'created_at']
         read_only_fields = ['slug', 'created_at']
 
 

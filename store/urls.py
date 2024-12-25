@@ -9,8 +9,12 @@ router.register('sizes', views.SizeViewSet, basename='size')
 router.register('carts', views.CartViewSet, basename='cart')
 router.register('customer', views.CustomerViewSet)
 
+
+product_router = routers.NestedDefaultRouter(router, 'products', lookup='product')
+product_router.register('images',views.ProductImageViewSet,basename='product-images')
+
 cart_router = routers.NestedDefaultRouter(router, 'carts', lookup='cart')
 cart_router.register('items', views.CartItemViewSet, basename='cart-item')
 
 
-urlpatterns = router.urls + cart_router.urls
+urlpatterns = router.urls + cart_router.urls + product_router.urls
