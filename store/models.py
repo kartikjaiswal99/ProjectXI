@@ -17,6 +17,9 @@ class Category(models.Model):
             self.slug = slugify(self.name) 
         super().save(*args, **kwargs)
 
+    class Meta:
+        ordering = ['name']
+
     def __str__(self):
         return self.name
 
@@ -49,6 +52,9 @@ class Product(models.Model):
 
     def __str__(self):
         return self.name
+    
+    class Meta:
+        ordering = ['name']
 
     
 class ProductImage(models.Model):
@@ -70,6 +76,8 @@ class Customer(models.Model):
     def last_name(self):    
         return self.user.last_name
     
+    class Meta:
+        ordering = ['user__first_name', 'user__last_name']
 
 class Address(models.Model):
     user = models.ForeignKey(

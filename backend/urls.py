@@ -21,6 +21,8 @@ from django.contrib import admin
 from django.urls import include, path
 import debug_toolbar
 
+admin.site.site_header = 'ANOIR Admin'
+
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("store/", include('store.urls')),
