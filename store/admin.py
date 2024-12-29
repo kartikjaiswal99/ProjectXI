@@ -23,6 +23,8 @@ class ProductAdmin(admin.ModelAdmin):
     search_fields = ['name']
     list_select_related = ['category']
     list_filter = ['category', 'updated_at']
+    filter_horizontal = ['sizes']
+
     def category_name(self, product):
         return product.category.name
 
@@ -95,9 +97,16 @@ class OrderItemInline(admin.TabularInline):
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ['id', 'placed_at', 'customer', 'payment_status', 'shipping_address']
+    list_display = ['id', 'placed_at', 'customer', 'payment_status', 'shipping_address_link']
     inlines = [OrderItemInline]
     autocomplete_fields = ['customer']
+
+    def shipping_address_link(self, obj):
+        if obj.shipping_address:
+            link = reverse("admin:store_address_change", args=[obj.shipping_address.id])
+            return format_html('<a href="{}">{}</a>', link, obj.shipping_address)
+        return "-"
+    shipping_address_link.short_description = 'Shipping Address'
 
 
 @admin.register(OrderItem)

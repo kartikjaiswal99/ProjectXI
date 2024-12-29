@@ -94,6 +94,8 @@ class Address(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def __str__(self):
+        return self.full_name
  
 class Order(models.Model):
     PAYMENT_STATUS_PENDING = 'P'
@@ -132,6 +134,7 @@ class OrderItem(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
 
 
 class Cart(models.Model):

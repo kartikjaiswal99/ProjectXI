@@ -1,5 +1,12 @@
 from rest_framework import serializers
-from .models import Product, Category, ProductImage, Size, Cart, CartItem, Customer
+from .models import Order, OrderItem, Product, Category, ProductImage, Size, Cart, CartItem, Customer, Address
+from django.db import transaction, models
+
+
+class SimpleProductSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = ['id', 'name', 'price']
 
 
 class CustomerSerializer(serializers.ModelSerializer):
@@ -115,3 +122,95 @@ class UpdateCartItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = CartItem
         fields = ['quantity']
+
+
+class OrderItemSerializer(serializers.ModelSerializer):
+    product = SimpleProductSerializer()
+    total_price = serializers.SerializerMethodField()
+
+    def get_total_price(self, obj):
+        return obj.quantity * obj.product.price
+
+    class Meta:
+        model = OrderItem
+        fields = ['id', 'product', 'size', 'quantity', 'unit_price', 'total_price']
+
+class OrderSerializer(serializers.ModelSerializer):
+    order_items = OrderItemSerializer(many=True, read_only=True)
+    grand_total = serializers.SerializerMethodField()
+
+    def get_grand_total(self, obj):
+        total = 0
+        for item in obj.order_items.all():
+            total += item.quantity * item.product.price
+        return total
+
+    class Meta:
+        model = Order
+        fields = ['id', 'customer', 'payment_status', 'shipping_address', 'placed_at', 'order_items', 'grand_total']
+        # read_only_fields = ['total_price', 'payment_status']
+
+class UpdateOrderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Order
+        fields = ['payment_status']
+
+class AddressSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Address
+        fields = ['id', 'full_name', 'apartment_address', 'street_address', 'postal_code', 'city', 'state', 'country']
+
+class CreateOrderSerializer(serializers.Serializer):
+    cart_id = serializers.UUIDField()
+    full_name = serializers.CharField(max_length=255, required=True)
+    apartment_address = serializers.CharField(max_length=100, required=True)
+    street_address = serializers.CharField(max_length=100, required=False, allow_blank=True)
+    postal_code = serializers.CharField(max_length=20, required=True)
+    city = serializers.CharField(max_length=100, required=True)
+    state = serializers.CharField(max_length=100, required=True)
+    country = serializers.CharField(max_length=100, required=True)
+
+
+    def validate_cart_id(self, cart_id):
+        if not Cart.objects.filter(id=cart_id).exists():
+            raise serializers.ValidationError('Cart Not found with given id')
+        if CartItem.objects.filter(cart_id=cart_id).count() == 0:
+            raise serializers.ValidationError('Cart is empty')
+        return cart_id
+
+
+    def save(self, **kwargs):
+        with transaction.atomic():
+            cart_id = self.validated_data['cart_id']
+
+            (customer, created) = Customer.objects.get_or_create(user_id=self.context['user_id'])
+
+            shipping_address = Address.objects.create(
+                user=customer,
+                full_name=self.validated_data['full_name'],
+                apartment_address=self.validated_data['apartment_address'],
+                street_address=self.validated_data.get('street_address', ''),
+                postal_code=self.validated_data['postal_code'],
+                city=self.validated_data['city'],
+                state=self.validated_data['state'],
+                country=self.validated_data['country']
+            )
+
+            order = Order.objects.create(customer=customer, shipping_address=shipping_address)
+
+            orders_items = [
+                OrderItem(
+                    order=order,
+                    product=item.product,
+                    size=item.size,
+                    quantity=item.quantity,
+                    unit_price=item.product.price
+                )
+                for item in CartItem.objects.filter(cart_id=cart_id)
+            ]
+
+            OrderItem.objects.bulk_create(orders_items)
+
+            CartItem.objects.filter(pk=cart_id).delete()
+
+            return order
