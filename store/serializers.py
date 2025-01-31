@@ -26,6 +26,14 @@ class SizeSerializer(serializers.ModelSerializer):
 
 
 class ProductImageSerializer(serializers.ModelSerializer):
+    image = serializers.SerializerMethodField()  # Convert image path to absolute URL
+
+    def get_image(self, obj):
+        request = self.context.get("request")  # Get request from context
+        if request:
+            return request.build_absolute_uri(obj.image.url)  # Full URL
+        return obj.image.url  # Fallback (relative URL)
+
     def create(self, validated_data):
         product_slug = self.context['product_slug']
         product = Product.objects.get(slug=product_slug)
@@ -58,10 +66,11 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class CartItemProductSerializer(serializers.ModelSerializer):
+    images = ProductImageSerializer(many=True, read_only=True)
 
     class Meta:
         model = Product
-        fields = ['id', 'slug', 'name', 'price']
+        fields = ['id', 'slug', 'name', 'price', 'images']
 
 
 class CartItemSerializer(serializers.ModelSerializer):

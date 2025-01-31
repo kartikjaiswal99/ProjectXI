@@ -53,7 +53,7 @@ class SizeViewSet(ModelViewSet):
     serializer_class = SizeSerializer
     permission_classes = [IsAdminUser]
 
-class CartViewSet(CreateModelMixin,RetrieveModelMixin,DestroyModelMixin,GenericViewSet):
+class CartViewSet(CreateModelMixin, RetrieveModelMixin, DestroyModelMixin, GenericViewSet):
     queryset = Cart.objects.prefetch_related('items__product').all()
     serializer_class = CartSerializer
 
@@ -69,10 +69,11 @@ class CartItemViewSet(ModelViewSet):
         return CartItemSerializer 
 
     def get_serializer_context(self):
-        return {'cart_id': self.kwargs['cart_pk']}
+        return {'cart_id': self.kwargs['cart_pk'],
+                "request": self.request,}
 
     def get_queryset(self):
-        return CartItem.objects.filter(cart_id=self.kwargs['cart_pk']).select_related('product')
+        return CartItem.objects.filter(cart_id=self.kwargs['cart_pk']).select_related('product').prefetch_related('product__images')
     
 
 class CustomerViewSet(ModelViewSet):
