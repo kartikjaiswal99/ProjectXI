@@ -20,12 +20,18 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 import debug_toolbar
+from djoser.views import UserViewSet
+from rest_framework_simplejwt.views import TokenObtainPairView
 
 admin.site.site_header = 'ANOIR Admin'
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("store/", include('store.urls')),
+
+    path("register/", UserViewSet.as_view({'post': 'create'}), name="register"),
+    path("login/", TokenObtainPairView.as_view(), name="login"),
+
     path('auth/', include('djoser.urls')),
     path('auth/', include('djoser.urls.jwt')),
     path('__debug__/', include(debug_toolbar.urls)),
