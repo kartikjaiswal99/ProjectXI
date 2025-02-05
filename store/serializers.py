@@ -106,6 +106,26 @@ class AddCartItemSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('Product not found with given id')
         return value
 
+    def validate(self, data):
+        product_id = data['product_id']
+        quantity = data['quantity']
+        size = data['size']
+
+        try:
+            product = Product.objects.get(id=product_id)
+        except Product.DoesNotExist:
+            raise serializers.ValidationError({'product_id': 'Invalid product ID.'})
+        
+        cart_id = self.context['cart_id']
+        existing_quantity = CartItem.objects.filter(cart_id=cart_id, product_id=product_id).aggregate(
+            total=models.Sum('quantity')
+        )['total'] or 0
+        if product.stock < (existing_quantity + quantity):
+            raise serializers.ValidationError({"quantity": f"Only {product.stock} items left in stock."})
+
+        return data
+
+
     def save(self, **kwargs):
         cart_id = self.context['cart_id']  
         product_id = self.validated_data['product_id']
@@ -157,7 +177,7 @@ class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = ['id', 'customer', 'payment_status', 'shipping_address', 'placed_at', 'order_items', 'grand_total']
-        # read_only_fields = ['total_price', 'payment_status']
+        read_only_fields = ['payment_status', 'shipping_address', 'customer']
 
 class UpdateOrderSerializer(serializers.ModelSerializer):
     class Meta:

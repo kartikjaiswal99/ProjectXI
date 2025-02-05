@@ -27,7 +27,7 @@ admin.site.site_header = 'ANOIR Admin'
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("store/", include('store.urls')),
+    path("", include('store.urls')),
 
     path("register/", UserViewSet.as_view({'post': 'create'}), name="register"),
     path("login/", TokenObtainPairView.as_view(), name="login"),
