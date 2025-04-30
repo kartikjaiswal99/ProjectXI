@@ -14,6 +14,8 @@ from pathlib import Path
 from environ import Env
 from datetime import timedelta
 import os
+import dj_database_url
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -101,6 +103,8 @@ DATABASES = {
     }
 }
 
+if ENVIRONMENT == 'production':
+    DATABASES['default'] = dj_database_url.parse(env('DATABASE_URL'))
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
