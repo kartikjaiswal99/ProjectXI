@@ -35,9 +35,9 @@ if ENVIRONMENT == 'development':
 else:   
     DEBUG = False
 
-# ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['projectxi.onrender.com']
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '172.16.112.40', '192.168.137.92']
+# ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '172.16.112.40', '192.168.137.92']
 
 
 
