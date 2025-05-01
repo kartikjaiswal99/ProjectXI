@@ -4,7 +4,7 @@ from uuid import uuid4
 from django.utils.text import slugify
 import uuid
 from django.core.validators import MinValueValidator
-
+from django_resized import ResizedImageField
 
 class Category(models.Model):
     name = models.CharField(max_length=500)
@@ -59,7 +59,7 @@ class Product(models.Model):
     
 class ProductImage(models.Model):
     product = models.ForeignKey('Product', models.CASCADE, related_name='images')
-    image = models.ImageField(upload_to='store/images')
+    image = ResizedImageField(quality=95, upload_to='store/images')
 
 
 class Customer(models.Model):

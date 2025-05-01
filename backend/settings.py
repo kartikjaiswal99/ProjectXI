@@ -55,6 +55,8 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "cloudinary_storage",
+    "cloudinary",
     "debug_toolbar",
     "store",
     "core",
@@ -123,7 +125,9 @@ DATABASES = {
 }
 
 # This is for production in render with its variables
-if ENVIRONMENT == 'production':
+POSTGRESQL_LOCAL = False
+
+if ENVIRONMENT == 'production' or POSTGRESQL_LOCAL == True:
     DATABASES['default'] = dj_database_url.parse(env('DATABASE_URL'))
 
 
@@ -166,7 +170,27 @@ STATICFILES_DIRS = [ BASE_DIR / 'static' ]
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+
+# DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
+if ENVIRONMENT == 'production' or POSTGRESQL_LOCAL == True:
+    STORAGES = {
+        "default": {
+            "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+            },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+            },
+    }
+    CLOUDINARY_STORAGE = {
+        'CLOUD_NAME': env('CLOUD_NAME'),
+        'API_KEY': env('CLOUD_API_KEY'),
+        'API_SECRET': env('CLOUD_API_SECRET'),
+    }
+else:
+    MEDIA_ROOT = BASE_DIR / 'media'
+
+
 
 
 # Default primary key field type
