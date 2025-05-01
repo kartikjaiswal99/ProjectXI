@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Razorpay Test Payment</title>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+</head>
+<body>
+    <button onclick="initiatePayment()">Pay Now</button>
+    <script>
+        function initiatePayment() {
+            // Replace these values with your actual data
+            const options = {
+                "key": "rzp_test_nRLazhsKO2CHMl", // Your Razorpay Test Key ID
+                "amount": 29700, // Amount in paise (e.g., 20000 for ₹200)
+                "currency": "INR",
+                "name": "Your Store Name",
+                "description": "Test Order Payment",
+                "order_id": "order_QPKh4kf8wnMkLv", // Replace with your razorpay_order_id
+                "handler": function (response) {
+                    console.log("Payment Successful!");
+                    console.log("razorpay_payment_id:", response.razorpay_payment_id);
+                    console.log("razorpay_order_id:", response.razorpay_order_id);
+                    console.log("razorpay_signature:", response.razorpay_signature);
+                    alert(`Payment ID: ${response.razorpay_payment_id}\nOrder ID: ${response.razorpay_order_id}\nSignature: ${response.razorpay_signature}`);
+                },
+                "prefill": {
+                    "name": "John Doe",
+                    "email": "test12@gmail.com",
+                },
+                "theme": {
+                    "color": "#3399cc"
+                }
+            };
+            const rzp = new Razorpay(options);
+            rzp.on('payment.failed', function (response) {
+                console.log("Payment Failed:", response.error);
+                alert("Payment Failed: " + response.error.description);
+            });
+            rzp.open();
+        }
+    </script>
+</body>
+</html>

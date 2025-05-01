@@ -100,9 +100,11 @@ class Address(models.Model):
 class Order(models.Model):
     PAYMENT_STATUS_PENDING = 'P'
     PAYMENT_STATUS_COMPLETE = 'C'
+    PAYMENT_STATUS_FAILED = 'F'
     PAYMENT_STATUS_CHOICES = [
         (PAYMENT_STATUS_PENDING, 'Pending'),
         (PAYMENT_STATUS_COMPLETE, 'Complete'),
+        (PAYMENT_STATUS_FAILED, 'Failed'),
     ]
 
     placed_at = models.DateTimeField(auto_now_add=True)
@@ -111,6 +113,9 @@ class Order(models.Model):
     customer = models.ForeignKey('Customer', on_delete=models.PROTECT)
     shipping_address = models.ForeignKey(
         'Address', related_name="shipping_orders", on_delete=models.SET_NULL, blank=True, null=True)
+    razorpay_order_id = models.CharField(max_length=255, blank=True, null=True)
+    razorpay_payment_id = models.CharField(max_length=255, blank=True, null=True)
+    razorpay_signature = models.CharField(max_length=255, blank=True, null=True)
 
     @property
     def get_grand_total(self):

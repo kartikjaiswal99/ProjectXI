@@ -29,13 +29,18 @@ ENVIRONMENT = env('ENVIRONMENT', default='production')
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = env('SECRET_KEY')
 
+# Razorpay API Key
+RAZORPAY_KEY_ID = env('RAZORPAY_KEY_ID')
+RAZORPAY_KEY_SECRET = env('RAZORPAY_KEY_SECRET')
+
+
 # SECURITY WARNING: don't run with debug turned on in production!
 if ENVIRONMENT == 'development':
     DEBUG = True
 else:   
     DEBUG = False
 
-ALLOWED_HOSTS = ['projectxi.onrender.com']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'projectxi.onrender.com']
 
 # ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '172.16.112.40', '192.168.137.92']
 
@@ -96,6 +101,20 @@ WSGI_APPLICATION = "backend.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
+
+#this is for webhostmost
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.postgresql",
+#         "NAME": "gqhdyhgi_krtk_postgresql",
+#         "USER": "gqhdyhgi_krtk_postgresql",
+#         "PASSWORD": "2$q0UR*WdBK~<&jK",
+#         "HOST": "127.0.0.1",
+#         "PORT": 5432
+#     }
+# }
+
+# This is for local development
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
@@ -103,8 +122,10 @@ DATABASES = {
     }
 }
 
+# This is for production in render with its variables
 if ENVIRONMENT == 'production':
     DATABASES['default'] = dj_database_url.parse(env('DATABASE_URL'))
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators

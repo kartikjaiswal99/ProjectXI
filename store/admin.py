@@ -1,6 +1,6 @@
 from urllib.parse import urlencode
 from django.contrib import admin
-from .models import Category, Customer, Order, OrderItem, Product, ProductImage, Address
+from .models import Category, Customer, Order, OrderItem, Product, ProductImage, Address, Size
 from django.db.models import Count
 from django.utils.html import format_html
 from django.urls import reverse
@@ -117,3 +117,7 @@ class OrderItemAdmin(admin.ModelAdmin):
 class AddressAdmin(admin.ModelAdmin):
     list_display = ['full_name', 'apartment_address', 'street_address', 'city', 'postal_code', 'state', 'country']
     
+
+@admin.register(Size)
+class SizeAdmin(admin.ModelAdmin):
+    list_display = ['size']

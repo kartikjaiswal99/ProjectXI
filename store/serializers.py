@@ -1,7 +1,8 @@
 from rest_framework import serializers
 from .models import Order, OrderItem, Product, Category, ProductImage, Size, Cart, CartItem, Customer, Address
 from django.db import transaction, models
-
+import razorpay
+from django.conf import settings
 
 class SimpleProductSerializer(serializers.ModelSerializer):
     class Meta:
@@ -176,8 +177,8 @@ class OrderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Order
-        fields = ['id', 'customer', 'payment_status', 'shipping_address', 'placed_at', 'order_items', 'grand_total']
-        read_only_fields = ['payment_status', 'shipping_address', 'customer']
+        fields = ['id', 'customer', 'payment_status', 'shipping_address', 'placed_at', 'order_items', 'grand_total', 'razorpay_order_id', 'razorpay_payment_id', 'razorpay_signature']
+        read_only_fields = ['payment_status', 'shipping_address', 'customer', 'razorpay_order_id', 'razorpay_payment_id', 'razorpay_signature']
 
 class UpdateOrderSerializer(serializers.ModelSerializer):
     class Meta:
@@ -240,6 +241,31 @@ class CreateOrderSerializer(serializers.Serializer):
 
             OrderItem.objects.bulk_create(orders_items)
 
-            CartItem.objects.filter(pk=cart_id).delete()
+            # calculate the grand total
+            grand_total = sum(item.quantity * item.unit_price for item in orders_items)
+
+            # Initialize Razorpay client
+            client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+            amount = int(grand_total * 100)  # Convert to paise
+            razorpay_order = client.order.create({
+                'amount': amount,
+                'currency': 'INR',
+                'payment_capture': '1'  # Auto-capture payment
+            })
+
+            order.razorpay_order_id = razorpay_order['id']
+            order.save()
+
+            CartItem.objects.filter(cart_id=cart_id).delete()
 
             return order
+
+            # CartItem.objects.filter(pk=cart_id).delete()
+
+            # return order
+
+
+class PaymentVerificationSerializer(serializers.Serializer):
+    razorpay_order_id = serializers.CharField(required=True)
+    razorpay_payment_id = serializers.CharField(required=True)
+    razorpay_signature = serializers.CharField(required=True)
